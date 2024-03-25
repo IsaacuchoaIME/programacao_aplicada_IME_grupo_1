@@ -10,7 +10,7 @@
 *                                                                         *
 ***
 """
-
+from qgis.core import QgsCoordinateReferenceSystem
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.core import (QgsProcessing,
                        QgsFeatureSink,
@@ -255,6 +255,7 @@ class ExampleProcessingAlgorithm(QgsProcessingAlgorithm):
         # helper text for when a sink cannot be evaluated
         if sink is None:
             raise QgsProcessingException(self.invalidSinkError(parameters, self.OUTPUT))
+        
         #####CAMADASRODOVIAS#####
         #FEDERAIS (ADEQUADO)
         rodoviasFederais = processing.run("native:extractbyexpression", 
@@ -338,6 +339,102 @@ class ExampleProcessingAlgorithm(QgsProcessingAlgorithm):
         }
         )
     
+        #CRIANDOEXTENSAOPARAVIRARRASTER
+        extensao = processing.run("native:polygonfromlayerextent", 
+            {'INPUT':vegetacao,
+            'ROUND_TO':0,
+            'OUTPUT':'TEMPORARY_OUTPUT'})
+            
+        #CRIANDO CAMADA RASTER PELA EXTENSAO
+        camadaRaster = processing.run("native:createconstantrasterlayer", 
+            {'EXTENT':'548036.875000000,560128.750000000,6625641.500000000,6653406.500000000 [EPSG:31981]',
+            'TARGET_CRS':QgsCoordinateReferenceSystem('EPSG:31981'),
+            'PIXEL_SIZE':1,
+            'NUMBER':1,
+            'OUTPUT_TYPE':5,
+            'OUTPUT':'TEMPORARY_OUTPUT'})
+        
+        ###RASTERIZANDO AS CAMADAS TEMPORARIAS###
+        #FEDERAIS 
+        processing.run("gdal:rasterize_over_fixed_value", 
+            {'INPUT': camadaRaster,
+            'INPUT_RASTER':rodoviasFederais,
+            'BURN':1,
+            'ADD':False,
+            'EXTRA':''})
+
+        #ESTADUAIS
+        processing.run("gdal:rasterize_over_fixed_value", 
+            {'INPUT': camadaRaster,
+            'INPUT_RASTER':rodoviasEstaduais,
+            'BURN':1,
+            'ADD':False,
+            'EXTRA':''})
+        
+        
+        #FLORESTAS ESPARSAS
+        processing.run("gdal:rasterize_over_fixed_value", 
+            {'INPUT': camadaRaster,
+            'INPUT_RASTER':florestasEsparsas,
+            'BURN':3,
+            'ADD':False,
+            'EXTRA':''})
+            
+        #FLORESTAS DENSAS
+        processing.run("gdal:rasterize_over_fixed_value", 
+            {'INPUT': camadaRaster,
+            'INPUT_RASTER':florestasDensas,
+            'BURN':3,
+            'ADD':False,
+            'EXTRA':''})
+            
+        #CAMPO EXPOSTO
+        processing.run("gdal:rasterize_over_fixed_value", 
+            {'INPUT': camadaRaster,
+            'INPUT_RASTER':florestasDensas,
+            'BURN':1,
+            'ADD':False,
+            'EXTRA':''})
+        
+        #CAMPOS CULTIVADOS
+        processing.run("gdal:rasterize_over_fixed_value", 
+            {'INPUT': camadaRaster,
+            'INPUT_RASTER':camposCultivados,
+            'BURN':2,
+            'ADD':False,
+            'EXTRA':''})
+            
+        #CAMPOS ABERTOS
+        processing.run("gdal:rasterize_over_fixed_value", 
+            {'INPUT': camadaRaster,
+            'INPUT_RASTER':camposAbertos,
+            'BURN':2,
+            'ADD':False,
+            'EXTRA':''})
+            
+        #CANAIS
+        processing.run("gdal:rasterize_over_fixed_value", 
+            {'INPUT': camadaRaster,
+            'INPUT_RASTER':drenagemSemCanais,
+            'BURN':3,
+            'ADD':False,
+            'EXTRA':''})
+        
+        #BUFFER MASSA D'AGUA
+        processing.run("gdal:rasterize_over_fixed_value", 
+            {'INPUT': camadaRaster,
+            'INPUT_RASTER':bufferMassaAgua,
+            'BURN':3,
+            'ADD':False,
+            'EXTRA':''})
+            
+        # BUFFER DRENAGEM
+        processing.run("gdal:rasterize_over_fixed_value", 
+            {'INPUT': camadaRaster,
+            'INPUT_RASTER':bufferDrenagem,
+            'BURN':3,
+            'ADD':False,
+            'EXTRA':''})    
             
         
         # Compute the number of steps to display within the progress bar and
