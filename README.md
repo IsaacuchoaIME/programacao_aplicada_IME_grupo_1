@@ -1,5 +1,7 @@
-Gustavo Ferreira,
-Matheus Silva e
+Gustavo Ferreira
+
+Matheus Silva 
+
 Isaac Uchôa
 
-#PROG_APLI_CCAV
+# PROG_APLI_CCAV
