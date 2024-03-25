@@ -1,14 +1,14 @@
-# -*- coding: utf-8 -*-
+# -- coding: utf-8 --
 
 """
-***************************************************************************
+***
 *                                                                         *
 *   This program is free software; you can redistribute it and/or modify  *
 *   it under the terms of the GNU General Public License as published by  *
 *   the Free Software Foundation; either version 2 of the License, or     *
 *   (at your option) any later version.                                   *
 *                                                                         *
-***************************************************************************
+***
 """
 
 from qgis.PyQt.QtCore import QCoreApplication
@@ -22,6 +22,7 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingParameterRasterDestination,
                        QgsProcessingMultiStepFeedback)
 from qgis import processing
+from qgis.core import QgsProject
 
 
 class ExampleProcessingAlgorithm(QgsProcessingAlgorithm):
@@ -215,10 +216,16 @@ class ExampleProcessingAlgorithm(QgsProcessingAlgorithm):
             context
         )
         
-        drenagem = self.parameterAsVectorLayer(
+        mdagua = self.parameterAsVectorLayer(
             parameters,
-            self.TD,
+            self.MDA,
             context
+        )
+        
+        RTD = self.parameterAsDouble(
+        parameters, 
+        self.RTD, 
+        context
         )
 
         if vias is None:
@@ -313,9 +320,25 @@ class ExampleProcessingAlgorithm(QgsProcessingAlgorithm):
             'OUTPUT':'TEMPORARY_OUTPUT'}
             )
         #MATA CILIAR DRENAGEM
-        
-        
-        
+        # BUFFER DRENAGEM
+        bufferDrenagem = processing.run ("native:buffer",
+            {
+            'INPUT' : drenagem,
+            'DISTANCE' : RTD,
+            'OUTPUT' : 'TEMPORARY_OUTPUT'
+            }     
+        )
+          
+        # BUFFER MASSA D'AGUA
+        bufferMassaAgua = processing.run ("native:buffer",
+        {
+        'INPUT' : mdagua ,
+        'DISTANCE' : RTD,
+        'OUTPUT' : 'TEMPORARY_OUTPUT'
+        }
+        )
+    
+            
         
         # Compute the number of steps to display within the progress bar and
         # get features from source
@@ -334,6 +357,7 @@ class ExampleProcessingAlgorithm(QgsProcessingAlgorithm):
             feedback.setProgress(int(current * total))
 
 
+        
         # To run another Processing algorithm as part of this algorithm, you can use
         # processing.run(...). Make sure you pass the current context and feedback
         # to processing.run to ensure that all temporary layer outputs are available
