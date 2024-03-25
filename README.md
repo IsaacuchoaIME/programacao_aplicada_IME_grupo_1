@@ -1,7 +1,3 @@
-Gustavo Ferreira
+Gustavo Ferreira, Matheus Silva e Isaac Uchôa
 
-Matheus Silva 
-
-Isaac Uchôa
-
-# PROG_APLI_CCAV
+# programacao_aplicada_IME_grupo_1
